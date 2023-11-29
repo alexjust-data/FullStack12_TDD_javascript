@@ -1,0 +1,26 @@
+{
+  "name": "tdd-javascript",
+  "version": "1.0.0",
+  "description": "Proyecto del módulo de Frontend PRO del Bootcamp de Web de KeepCoding.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:local": "jest --config=jest.config.js",
+    "test:json": "jest --json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@types/jest": "^29.5.10",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-extended": "^4.0.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}
