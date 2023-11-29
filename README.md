@@ -364,6 +364,199 @@ describe("Media de valores positivos", () => {
 ```
 
 
+**Archivos test vs spec**
+
+`multiplica.test.js` es lo mismo que `multiplica.spec.js`
+
+
+### Tunning Jest
+
+Jest dispone de un buen montón de matchers, pero a veces para la lectura y testeo rápido de unit testing, iría bien poder expandir las capacidades de Jest. Esto lo conseguimos tocando la configuración.
+
+https://jest-extended.jestcommunity.dev/
+
+Focus on What Matters : jest-extended proporciona comparadores para todo tipo de datos para que pueda encontrar rápidamente el mejor comparador para su prueba.
+
+```sh
+npm install --save-dev jest-extended
+```
+
+```json
+package.json
+"jest": {
+  "setupFilesAfterEnv": ["jest-extended/all"]
+}
+```
+veo que esta linea existe, me la descomento
+
+```js
+  // A list of paths to modules that run some code to configure or set up the testing framework before each test
+  setupFilesAfterEnv: ["jest-extended/all"],
+```
+
+también podemos aprobechar nuestro fichero de `jest.config.js`
+
+Ahora puedes utilizar las extensione de la API : https://jest-extended.jestcommunity.dev/docs/matchers
+
+Por ejemplo, ahora puedes en `statics.js` utilizar `.toBePositive();` 
+* Use .toBePositive when checking if a value is a positive Number.
+* Use .toBeNaN when checking a value is NaN.
+* Use .toBeNegative when checking if a value is a negative Number.
+* Use .toBeEven when checking if a value is an even Number.
+* Use .toBeWithin when checking if a number is in between the given bounds of: start (inclusive) and end (exclusive).
+* etc, Array,Boolean, Date, Function, Mock, Number, Object, Promise, String, Symbol, 
+  
+todo una sintaxi más legible
+
+```js
+    // Positive numbers
+    it("Should return a positive number from any imput array with positive values", () => {
+        expect(avg([1,2,3])).toBePositive();
+        expect(avg([1,2,3])).toBeWithin(1,3);
+        expect(avg([1,2,2,4])).toBePositive();
+        expect(avg([1,2,2,4, 0.1])).toBePositive();
+        expect(avg([0.1, 0.000001, 0.3])).toBePositive();
+    });
+
+    it("Should return a negative number from any input array with negative values", () => {
+        expect(avg([-1,-2,-3])).toBeNegative();
+        expect(avg([-1,-2,-2,-4])).toBeNegative();
+    })
+```
+
+**EJEMPLO testear un carrito de compra**
+
+creo carpeta `classes/`
+¿cómo trabajaríamos si estamos trabajando con TDD?  
+¿qué funcionalidad tendría que hacer ahora si mehan pedido un carrito de la compra ?
+1. crear el test de ese carrito
+
+```js
+import Carrito from './Carrito';
+
+describe("Testing class Carrito", () => {
+  
+    // Carrito without elements at init.
+    it("Should return 0 at initialization", () => {
+        expect(carrito.getTotalItems()).toEqual(0);
+    });
+}
+```
+
+Esto fallará cuando `npm test` porque no existe ningun carrit. Vamos a solucionarlo creando `carrito.js` 
+
+```js
+module.exports = class Carrito {}
+```
+Ahora miras en el test y te está diciendo que se expera un metodo `expect(carrito.getTotalItems()).toEqual(0);` que debe ser 0. pues vamos ahcerlo:
+
+```js
+module.exports = class Carrito {
+
+    getTotalItems() {
+        return 0;
+    }
+}
+```
+
+Esto pasa. Siguiente : que despues de añadir un producto al carrto , el carrito devuelva que el item es 1. Pues añadimos esto al test
+
+```js
+describe("Testing class Carrito", () => {
+  
+    // Carrito without elements at init.
+    it("Should return 0 at initialization", () => {
+        expect(carrito.getTotalItems()).toEqual(0);
+    });
+    // After adding an element return 1.
+    it("Should return 1 after adding 1 product", () => {
+        carrito.addItem(sushiItem);
+        expect(carrito.getTotalItems()).toEqual(1);
+    });
+}
+```
+
+ 
+### Hooks
+
+Podemos customizar acciones que se realicen a cada test, antes o después y por cada test suite también.
+
+Estos son:  
+- beforeAll  
+- beforeEach  
+- afterAll  
+- afterEach  
+
+Controlan en ciclo de vida del test. Una suit de testin el el archivo por el cual pasa la aplicación de test para testear, todo el archivo es una suit. Y cada uno de los grupos que podemos agrupar en un skipe los podemos dotar de funcionalidad o podemos controlar su flujo de vida, podremos controlar cosas que pasen antes de todos los test, despues de todos o despues de cada uno.
+
+Ejemplos: 
+- estamos testeando el registro de un usuario y en BBDD tenemos un control que el email es unico, pues no podemos lanzar ese test repetidas veces si el emial que le pasamos como usuario es estatico o no, al final la BBDD nos admitirá un unico registro. ¿que podemos hacer? que antes o despues de ejecutar el test, elimine cualquier usuario con ese correo.
+- Típico caso que estamos testeando enun afuncion que escribe en un archivo, nosotros podemos escribir cosas con un write o al final del archivo con un append que lo que hace es añadir lineas. Si lo hacemos continuamente al final se van llenando de lineas. Entonces antoes y o despues hemos de ir alimnando
+
+
+### Manejo de excepciones
+
+En nuestro código en muchas ocasiones tenemos que gestionar excepciones. Jest nos permite evaluar los tests cuyas funciones o métodos que estamos evaluando lanzan excepciones.
+
+La particularidad es que lo que le vamos a pasar a expect() será un callback y no un valor calculado.
+
+Ejemplo:
+- Imagina que es un día muy demandado, como la víspera de Año Nuevo. Esperaríamos que, para ciertas horas, no haya mesas disponibles.  
+- Prueba de Jest: Queremos asegurarnos de que nuestra función maneja adecuadamente estas situaciones y lanza una excepción cuando no hay disponibilidad.
+
+
+### Testear promesas
+
+Habitualmente nuestro código necesita datos externos, como llamadas a apis de terceros, que se devuelven promesas.
+Dado que nosotros estamos programando usando esas apis, lo que deberemos hacer es comprobar que nuestro código funciona (pasa los tests) correctamente usando esos recursos de terceros.
+No debemos testear los recursos en sí
+
+- Situación: Tienes una función en tu aplicación que se conecta con un servicio de pagos de terceros para procesar transacciones.
+- Test de Promesas: Sin testear la API de pagos en sí (eso corresponde al proveedor del servicio), te enfocas en asegurarte de que tu función maneje correctamente la respuesta de la API, ya sea un éxito (promesa resuelta) o un error (promesa rechazada). Puedes simular respuestas exitosas y de error para verificar cómo tu código maneja ambos casos.
+
+
+### Mocks
+
+- Se conoce a Mock como a los objetos que imitan el comportamiento de objetos reales de una forma controlada.
+  
+- Se usan para probar otros objetos en tests unitarios que esperan ciertas respuestas de alguna librería, base de datos o de una clase y esas respuestas no son necesarias para la ejecución de nuestra prueba.
+  
+- Ejemplos:
+- Devolver registros de una DB
+- Insertar elementos en una DB
+- Llamadas a apis de terceros que consumen por llamada
+- Imitar registros de actividad en un blog.
+
+- Cada framework de test implementa sus mocks de una forma. En jest podemos crear mocks de cualquier cosa.
+- Podemos crear un mock de una clase, una dependencia externa que se encuentre en el node_modules, etc...
+- Para crear mocks de una clase en javascript bastaría llamar al método mock de Jest
+- En cambio, si usamos Mocha no hay una manera directa de crear mocks, sino que deberíamos apoyarnos en librerías externas como Sinon.js
+  
+Gracias al potencial de los mocks, podemos tener métricas de:
+- Las veces que se llama una función.
+- Los parámetros con los que se ha llamado a dicha función.
+- El output que haya generado la llamada al mock
+  
+Y también podremos modificar su comportamiento.
+En jest, usaremos normalmente:
+- .mock: para cargar nuestros propios mocks.
+- .fn: para generar funciones mock desde 0.
+- .spyOn: para generar también funciones mock de una función ya
+- existente.
+### Coverage - Jest
+
+- El coverage es una medida de calidad de nuestras pruebas unitarias.
+- Gracias a esto se pueden sacar varias conclusiones:
+- Podemos necesitar más tests
+- Hay código en la app que, actualmente, no se usa y por lo tanto se puede eliminar
+- ¿Entonces para testear bien una aplicación hay que tener el coverage al 100%?
+- ¿Haría falta testear una función que recibe una string y evalúa esa string con un switch?¿Habría que testear cada una de la salidas posibles de esa función?
+- En Jest podemos ver nuestro coverage ejecutando nuestros tests con el flag --coverage, esto nos devuelve una tabla en terminal donde se especifica el porcentaje de código que tenemos testeado en cada uno de los archivos de nuestra app.
+- También, en la configuración podemos especificar un mínimo para que hasta que nuestros tests no superen ese porcentaje no sea dado por válido.
+- Jest también nos devuelve en coverage en forma de fichero html, mostrando más información acerca del coverage de nuestros tests.
+- 
+En Mocha, como para la comprobación de los tests necesitamos una librería externa llamada Istanbul
+
 ---
 
 Referencias:
