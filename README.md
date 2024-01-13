@@ -1,5 +1,8 @@
 # KeepCoding Web Bootcamp XV - TDD Con Javascript.
 Proyecto del módulo de Frontend PRO del Bootcamp de Web de KeepCoding.
+* https://discord.com/channels/1112689497642115172/1112689499605049375
+* https://github.com/KeepCodingWeb15/tdd-javascript
+* https://github.com/NauelG
 
 ## Requisitos
 Para el seguimiento del curso vamos a utilizar las herramientas que ya conocemos:
